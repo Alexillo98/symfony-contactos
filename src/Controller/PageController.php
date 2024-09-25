@@ -8,9 +8,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class PageController extends AbstractController
 {
-    /**
-     * @Route("/page", name="page")
-     */
+    private $contactos = [
+        1 => ["nombre" => "Juan Pérez", "telefono" => "524142432", "email" => "juanp@ieselcaminas.org"],
+        2 => ["nombre" => "Ana López", "telefono" => "58958448", "email" => "anita@ieselcaminas.org"],
+        5 => ["nombre" => "Mario Montero", "telefono" => "5326824", "email" => "mario.mont@ieselcaminas.org"],
+        7 => ["nombre" => "Laura Martínez", "telefono" => "42898966", "email" => "lm2000@ieselcaminas.org"],
+        9 => ["nombre" => "Nora Jover", "telefono" => "54565859", "email" => "norajover@ieselcaminas.org"]
+    ];
+    #[Route('/page', name: 'app_page')]
     public function index(): Response
     {
         return $this->render('page/index.html.twig', [
@@ -18,11 +23,53 @@ class PageController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/", name="inicio")
-     */
+    #[Route('/', name: 'inicio')]
     public function inicio(): Response
     {
         return $this->render('inicio.html.twig');
+    }
+
+    /*base de datos*/
+
+    #[Route('/contacto/{codigo}', name: 'ficha_contacto')] /* { } <-- significa opcional*/
+    public function ficha(int $codigo): Response
+    {
+        $resultado = ($this->contactos[$codigo] ?? null);
+
+        if ($resultado) {
+            $html = "<ul>";
+                $html .= "<li>" . $codigo . "</li>";
+                $html .= "<li>" . $resultado["nombre"] . "</li>";
+                $html .= "<li>" . $resultado["telefono"] . "</li>";
+                $html .= "<li>" . $resultado["email"] . "</li>";
+            $html .= "</ul>";
+            return new Response("<html><body>$html</body>");
+        }
+        return new Response("<html><body>Contacto $codigo no encontrado</body>");
+    }
+
+    /*buscar*/
+
+    #[Route('/contacto/buscar/{texto}', name: 'buscar')]
+    public function buscar($texto): Response
+    {
+        //Filtrar aquello que tengan el texto en el nombre
+        $resultados = array_filter($this->contactos, function ($contacto) use ($texto) {
+            return strpos($contacto["nombre"], $texto) !== false;
+        }
+        );
+
+        if(count($resultados)) {
+            $html = "<ul>";
+            foreach ($resultados as $id => $contacto) {
+                $html .= "<li>" . $id . "</li>";
+                $html .= "<li>" . $contacto["nombre"] . "</li>";
+                $html .= "<li>" . $contacto["telefono"] . "</li>";
+                $html .= "<li>" . $contacto["email"] . "</li>";
+            }
+            $html .= "</ul>";
+            return new Response("<html><body>$html</body>");
+        }
+        return new Response("<html><body>No se ha encontrado ningun contacto</body>");
     }
 }
